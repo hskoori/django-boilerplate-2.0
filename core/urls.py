@@ -7,11 +7,10 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
+
 urlpatterns = [
     path("api/v1/", include("core.api_router_v1", namespace="api_router_v1")),
-    path("api/v2/", include("core.api_router_v1", namespace="api_router_v1")),
-
-
+    path("api/v2/", include("core.api_router_v2", namespace="api_router_v2")),
 
     # User management
     path("user/", include("apps.user_account.urls", namespace="user_account")),
@@ -25,10 +24,11 @@ urlpatterns = [
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+
 # API URLS
 urlpatterns += [
     # API base url
-    path("api/", include("core.api_router")),
+    # path("api/", include("core.api_router")),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),

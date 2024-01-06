@@ -1,7 +1,7 @@
 from django.conf import settings
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
-from apps.user_account.api.views import UserViewSet
+from apps.user_account.api_v1.views import UserViewSet
 
 from django.urls import include, path
 
@@ -14,7 +14,7 @@ else:
 
 urlpatterns = [
     # API routes
-    path("user/", include("apps.user_account.urls", namespace="user_account")),
+    path("user/", include("apps.user_account.api_v2.api_router", namespace="user_account")),
 
 ]
 
