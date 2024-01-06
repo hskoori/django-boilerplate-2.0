@@ -39,5 +39,5 @@ class UserAdmin(auth_admin.UserAdmin):
     list_display = ["username", "is_superuser"]
     search_fields = ["username"]
 # class UserAdmin(admin.ModelAdmin):
-#     list_display = ('user_id','full_name','dob','phone','phone_verified','email','email_verified','date_joined','role','is_admin','is_active',)
+#     list_display = ('username','full_name','dob','phone','phone_verified','email','email_verified','date_joined','role','is_admin','is_active',)
 # admin.site.register(User, UserAdmin)

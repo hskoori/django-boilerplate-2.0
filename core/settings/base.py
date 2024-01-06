@@ -49,7 +49,7 @@ USE_TZ = True
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
-        default="postgres://hashid:hashid@127.0.0.1:5432/hashid_db2",
+        default="postgres://hashid:hashid@127.0.0.1:5432/hashid3",
     ),
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
