@@ -36,8 +36,5 @@ class UserAdmin(auth_admin.UserAdmin):
         ),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
-    list_display = ["username", "is_superuser"]
+    list_display = ["username", "is_superuser",'pk','full_name','phone','phone_verified','email', 'email_verified','date_joined', 'is_admin','role','is_staff','date_joined','is_active',]
     search_fields = ["username"]
-# class UserAdmin(admin.ModelAdmin):
-#     list_display = ('username','full_name','dob','phone','phone_verified','email','email_verified','date_joined','role','is_admin','is_active',)
-# admin.site.register(User, UserAdmin)

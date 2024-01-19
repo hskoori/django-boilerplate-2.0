@@ -1,25 +1,25 @@
-from django.conf import settings
-from rest_framework.routers import DefaultRouter, SimpleRouter
+# from django.conf import settings
+# from rest_framework.routers import DefaultRouter, SimpleRouter
 
-from apps.user_account.api_v1.views import UserViewSet
+# from apps.user_account.api_v1.views import UserViewSet
 
-from django.urls import include, path
-
-
-if settings.DEBUG:
-    router = DefaultRouter()
-else:
-    router = SimpleRouter()
+# from django.urls import include, path
 
 
-urlpatterns = [
-    # API routes
-    path("user/", include("apps.user_account.api_v1.api_router", namespace="user_account")),
-
-]
-
-# router.register("user-account", UserViewSet)
+# if settings.DEBUG:
+#     router = DefaultRouter()
+# else:
+#     router = SimpleRouter()
 
 
-app_name = "api"
-urlpatterns = router.urls
+# urlpatterns = [
+#     # API routes
+#     path("user/", include("apps.user_account.api_v1.api_router", namespace="user_api_v1")),
+
+# ]
+
+# # router.register("user-account", UserViewSet)
+
+
+# app_name = "api"
+# urlpatterns = router.urls

@@ -143,3 +143,30 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    # @property
+    # def is_staff(self):
+    #     return self.staff
+
+    # @property
+    # def is_active(self):
+    #     return self.active
+
+    # @property
+    # def is_admin(self):
+    #     return self.admin
+
+    # @property
+    # def is_doctor(self):
+    #     return self.doctor
+
+    # @property
+    # def is_user(self):
+    #     return self.user
+    
+class LoginHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    login_date = models.DateTimeField(auto_now_add=True,null=True,blank=True)
+    ip_address = models.GenericIPAddressField()
+    login_method = models.CharField(max_length=255)
+    

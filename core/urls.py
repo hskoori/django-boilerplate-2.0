@@ -9,11 +9,11 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 
 urlpatterns = [
-    path("api/v1/", include("core.api_router_v1", namespace="api_router_v1")),
-    path("api/v2/", include("core.api_router_v2", namespace="api_router_v2")),
+    path("api/v1/users/", include("apps.user_account.api_v1.api_router", namespace="user_account_api_router_v1")),
+    # path("api/v2/", include("core.api_router_v2", namespace="api_router_v2")),
 
     # User management
-    path("user/", include("apps.user_account.urls", namespace="user_account")),
+    path("user/", include("apps.user_account.urls", namespace="users")),
     # path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
 
