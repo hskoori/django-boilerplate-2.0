@@ -14,6 +14,7 @@ READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
 if READ_DOT_ENV_FILE:
     # OS environment variables take precedence over variables from .env
     env.read_env(str(BASE_DIR / ".env"))
+    
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -52,6 +53,7 @@ DATABASES = {
         default="postgres://hashid:hashid@127.0.0.1:5432/hashid3",
     ),
 }
+
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
