@@ -49,7 +49,7 @@ USE_TZ = True
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
-        default="postgres://sampleuser:sample@127.0.0.1:5432/afsal",
+        default="postgres://hashid:hashid@127.0.0.1:5432/hashid5",
     ),
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
@@ -291,7 +291,7 @@ SOCIALACCOUNT_FORMS = {"signup": "apps.user_account.forms.UserSocialSignupForm"}
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         # "rest_framework.authentication.SessionAuthentication",
-        # "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
         'rest_framework.authentication.BasicAuthentication',
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),

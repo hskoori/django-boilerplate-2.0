@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model, decorators
 from django.utils.translation import gettext_lazy as _
-from .models import User
+from .models import User,LoginHistory
 
 from apps.user_account.forms import UserAdminChangeForm, UserAdminCreationForm
 
@@ -21,13 +21,17 @@ class UserAdmin(auth_admin.UserAdmin):
     add_form = UserAdminCreationForm
     fieldsets = (
         (None, {"fields": ("username", "password")}),
-        (_("Personal info"), {"fields": ("name", "email")}),
+        (_("Personal info"), {"fields": ("full_name", "email","phone")}),
         (
             _("Permissions"),
             {
                 "fields": (
+                    "country_code",
+                    "phone_verified",
+                    "email_verified",
                     "is_active",
                     "is_staff",
+                    "is_admin",
                     "is_superuser",
                     "groups",
                     "user_permissions",
@@ -38,3 +42,16 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     list_display = ["username", "is_superuser",'pk','full_name','phone','phone_verified','email', 'email_verified','date_joined', 'is_admin','role','is_staff','date_joined','is_active',]
     search_fields = ["username"]
+
+
+# Register your models here.
+class LoginHistoryAdmin(admin.ModelAdmin):
+    list_display = ('id',
+    'user',
+    'login_date',
+    'ip_address',
+    'login_method',
+    )
+admin.site.register(LoginHistory,LoginHistoryAdmin)
+
+
