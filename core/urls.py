@@ -9,15 +9,17 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 
 urlpatterns = [
-    #User_account API routes
-    path("api/v1/", include("core.api_v1_router")),
-    path("api/v2/users", include("apps.user_account.api_v2.api_router", namespace="user_account_api_v2")),
-    #User_account urls
-    path("user/", include("apps.user_account.urls", namespace="user_account")),
-    
-    
-    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
-    path("about/", TemplateView.as_view(template_name="pages/about.html"), name="about"),
+    path("api/v1/users/", include("apps.user_account.api_v1.api_router", namespace="user_account_api_router_v1")),
+    # path("api/v2/", include("core.api_router_v2", namespace="api_router_v2")),
+
+    # User management
+    path("user/", include("apps.user_account.urls", namespace="users")),
+    # path("accounts/", include("allauth.urls")),
+    # Your stuff: custom urls includes go here
+
+    # path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    # path("about/", TemplateView.as_view(template_name="pages/about.html"), name="about"),
+    # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

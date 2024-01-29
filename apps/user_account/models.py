@@ -39,6 +39,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_admin', True)
         extra_fields.setdefault('is_superuser', True)
 
         if extra_fields.get('is_staff') is not True:
@@ -79,18 +80,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     username_validator = UnicodeUsernameValidator()
 
     id =models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(
-        _('username'),
-        max_length=150,
-        unique=True,
-        help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
-        validators=[username_validator],
-        error_messages={
-            'unique': _("A user with that username already exists."),
-        },
-    )
+    # username = models.IntegerField(
+    #     _('username'),
+    #     max_length=150,
+    #     unique=True,
+    #     help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+    #     validators=[username_validator],
+    #     error_messages={
+    #         'unique': _("A user with that username already exists."),
+    #     },
+    # )
+    username = models.IntegerField(unique=True,default=1)
+
     full_name = models.CharField(_("Name of User"), blank=True, max_length=255)
     dob = models.CharField(max_length=30,null=True,blank=True)
+    country_code = models.CharField(max_length=5,null=True,blank=True,default=91)
     phone = models.CharField(max_length=30,null=True,blank=True)
     phone_verified = models.BooleanField(default=False)
     email = models.EmailField(_('email address'), blank=True)
@@ -125,6 +129,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = _('users')
         swappable = 'AUTH_USER_MODEL'
 
+    def __str__(self):
+        return str(self.get_username())
+
     def clean(self):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
@@ -143,3 +150,37 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    # @property
+    # def is_staff(self):
+    #     return self.staff
+
+    # @property
+    # def is_active(self):
+    #     return self.active
+
+    # @property
+    # def is_admin(self):
+    #     return self.admin
+
+    # @property
+    # def is_doctor(self):
+    #     return self.doctor
+
+    # @property
+    # def is_user(self):
+    #     return self.user
+    
+class LoginHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    login_date = models.DateTimeField(auto_now_add=True,null=True,blank=True)
+    ip_address = models.GenericIPAddressField()
+    login_method = models.CharField(max_length=100)
+    
+    class Meta:
+        db_table = 'user_login_history'
+        verbose_name = ('LoginHistory')
+        verbose_name_plural = ('LoginHistories')
+        ordering = ('-login_date',)
+    def __str__(self):
+        return str(self.user.full_name)
