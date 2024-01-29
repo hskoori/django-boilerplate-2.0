@@ -1,21 +1,17 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from random import randint
-from rest_framework import viewsets
 from apps.user_account.models import User ,LoginHistory
 
 
 from rest_framework.decorators import action
 from django.contrib.auth import authenticate, login
 from rest_framework.permissions import AllowAny,IsAuthenticated
-from apps.user_account.functions import validate_email,validate_username,IsAdmin,send_phone_otp,send_email_otp,validate_phone,get_new_username,random_password,save_login_history
-from rest_framework.authentication import SessionAuthentication
+from apps.user_account.functions import validate_email,IsAdmin,send_phone_otp,send_email_otp,validate_phone,random_password,save_login_history
+# from rest_framework.authentication import SessionAuthentication
 from django.contrib.sessions.models import Session
-from django.http import HttpResponseBadRequest
 from rest_framework.viewsets import  ModelViewSet
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin 
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import api_view,parser_classes,permission_classes,authentication_classes
 from rest_framework.parsers import JSONParser,FormParser, MultiPartParser,FileUploadParser
 from .serializers import (
@@ -27,7 +23,6 @@ from rest_framework.authtoken.models import Token
 from django.contrib.sessions.backends.db import SessionStore
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.filters import SearchFilter
 
 User = get_user_model()
@@ -40,14 +35,29 @@ User = get_user_model()
 
 
 class UserViewSet(ModelViewSet):
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     queryset = User.objects.all()
     lookup_field = "username"
     filter_backends = [SearchFilter]
     search_fields = ['username','phone','email','full_name']
 
-    
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_admin:
+            return User.objects.all()
+        else:
+            return User.objects.filter(pk=user.pk)
+
+    def get_permissions(self):
+        if self.action == 'destroy':
+            permission_classes = [IsAdmin]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+
+
     # def get_permissions(self):
     #     if self.action in ['destroy', 'update']:
     #         permission_classes = [IsAdmin]
@@ -133,13 +143,14 @@ class UserViewSet(ModelViewSet):
 # >>>>> Register with phone number <<<<<<<<<
 @api_view(['POST',])
 @permission_classes((AllowAny, ))
-@authentication_classes([SessionAuthentication])
+# @authentication_classes([SessionAuthentication])
 @parser_classes([JSONParser, FormParser, MultiPartParser, FileUploadParser])
 def registration_phone(request):
     status_code = status.HTTP_400_BAD_REQUEST
     if request.method == 'POST':
         data = {}
         phone = request.data.get('phone', '0')
+        country_code = request.data.get('country_code', '0')
         request_data = request.data.copy()
         serializer = UserSerializer(data=request_data)
         request_data['password'] = request_data['password'] if 'password' in request_data else random_password(16)
@@ -147,12 +158,13 @@ def registration_phone(request):
         if serializer.is_valid():
             status_code = status.HTTP_200_OK
             data = serializer.data
-            if(validate_phone(phone)==None):
+            if(validate_phone(country_code,phone)):
                 data['status'] = 'success'
                 data['message'] = 'User registration successful. OTP sent to the provided phone number.'
                 otp = randint(1000, 9999)
                 my_session = SessionStore()
                 my_session['phone'] = phone
+                my_session['country_code'] = country_code
                 my_session['email'] = request_data['email'] if 'email' in request_data else None
                 my_session['full_name'] = request_data['full_name'] if 'full_name' in request_data else None
                 my_session['dob'] = request_data['dob'] if 'dob' in request_data else None
@@ -186,6 +198,7 @@ def verify_phone(request):
     otp = int(request.data.get('otp'))
     if("otp" in my_session and "otp_count" in my_session) and otp == my_session['otp']  and (my_session['otp_count'] > 0):
         request_data = request.data.copy()
+        request_data['country_code'] = my_session['country_code']
         request_data['phone'] = my_session['phone']
         request_data['password'] = my_session['password']
         serializer = UserSerializer(data=request_data)
@@ -226,10 +239,9 @@ def verify_phone(request):
 
 # >>>>> Register with email <<<<<<<<<
 # >>>>> Register with email <<<<<<<<<
-@csrf_exempt
 @api_view(['POST',])
 @permission_classes((AllowAny, ))
-@authentication_classes([SessionAuthentication])
+# @authentication_classes([SessionAuthentication])
 @parser_classes([JSONParser,FormParser, MultiPartParser,FileUploadParser])
 def registration_email(request):
     status_code = status.HTTP_400_BAD_REQUEST
@@ -242,12 +254,13 @@ def registration_email(request):
         if serializer.is_valid():
             status_code = status.HTTP_200_OK
             data = serializer.data
-            if(validate_email(email)==None):
+            if(validate_email(email)):
                 data['status'] = 'success'
                 data['message'] = 'User registration successful. OTP sent to the provided email address.'
                 otp = randint(1000, 9999)
                 my_session = SessionStore()
                 my_session['email'] = email
+                my_session['country_code'] = request_data['country_code'] if 'country_code' in request_data else None
                 my_session['phone'] = request_data['phone'] if 'phone' in request_data else None
                 my_session['full_name'] = request_data['full_name'] if 'full_name' in request_data else None
                 my_session['dob'] = request_data['dob'] if 'dob' in request_data else None
@@ -696,7 +709,6 @@ def verify_forget_password(request):
     return Response({'message': 'Invalid request method.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_password(request):
@@ -713,6 +725,136 @@ def change_password(request):
             return Response({'message': 'invalid Password'},status=status.HTTP_400_BAD_REQUEST)
             
     return Response({'message': 'Invalid request method.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+# >>>>> Phone verification <<<<<<<<<
+# >>>>> Phone verification <<<<<<<<<
+@api_view(['POST',])
+@permission_classes((IsAuthenticated, ))
+# @authentication_classes([SessionAuthentication])
+@parser_classes([JSONParser,FormParser, MultiPartParser,FileUploadParser])
+def phone_verification_otp(request):
+    status_code = status.HTTP_400_BAD_REQUEST
+    if request.method == 'POST':
+        data = {}
+        user = request.user
+        phone = request.user.phone
+        country_code = request.user.country_code
+        if(phone and user.phone_verified == False):
+            otp = randint(1000, 9999)
+            my_session = SessionStore()
+            my_session['otp'] = otp
+            my_session['otp_count'] = 5
+            my_session.create()
+            data['session_key'] = my_session.session_key
+            data['message'] = "OTP sent"
+            send_phone_otp(country_code,phone,otp)
+            my_session.save()
+            status_code = status.HTTP_200_OK
+        else:
+            data['status'] = 'error'
+            data['message'] = 'Somthing went wrong..!'
+        return Response(data, status=status_code)
+    else:
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes((AllowAny, ))
+@parser_classes([JSONParser,FormParser, MultiPartParser,FileUploadParser])
+def verify_phone_verification_otp(request):
+    session_key = request.data.get('session_key')
+    my_session = SessionStore(session_key=session_key)
+    data = {}
+    otp = int(request.data.get('otp'))
+    user = request.user
+    if("otp" in my_session and "otp_count" in my_session) and otp == my_session['otp']  and (my_session['otp_count'] > 0):
+        user.phone_verified=True
+        user.save()
+        data['phone'] = user.phone
+        data['pk'] = user.pk
+        data['response'] = "Phone number Verfied Successfully"
+        status_code=status.HTTP_200_OK
+        my_session.delete()
+    else:
+        if("otp_count" in my_session and my_session['otp_count'] > 0):
+            my_session['otp_count'] -= 1
+            data['error_message'] = "invalid OTP"
+        else:
+            my_session.delete()
+            data['error_message'] = "Limit Exceeded, Register again"
+
+        status_code=status.HTTP_400_BAD_REQUEST
+    return Response(data,status=status_code)
+    
+# >>>>> Phone verification <<<<<<<<<
+# >>>>> Phone verification <<<<<<<<<
+
+
+# >>>>> Email verification <<<<<<<<<
+# >>>>> Email verification <<<<<<<<<
+@api_view(['POST',])
+@permission_classes((IsAuthenticated, ))
+# @authentication_classes([SessionAuthentication])
+@parser_classes([JSONParser,FormParser, MultiPartParser,FileUploadParser])
+def email_verification_otp(request):
+    status_code = status.HTTP_400_BAD_REQUEST
+    if request.method == 'POST':
+        data = {}
+        user = request.user
+        email = request.user.email
+        if(email and user.email_verified == False):
+            otp = randint(1000, 9999)
+            my_session = SessionStore()
+            my_session['otp'] = otp
+            my_session['otp_count'] = 5
+
+            my_session.create()
+            data['session_key'] = my_session.session_key
+            data['message'] = "OTP sent"
+            send_email_otp(email,otp)
+            my_session.save()
+            status_code = status.HTTP_200_OK
+        else:
+            data['status'] = 'error'
+            data['message'] = 'Somthing went wrong..!'
+        return Response(data, status=status_code)
+    else:
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes((AllowAny, ))
+@parser_classes([JSONParser,FormParser, MultiPartParser,FileUploadParser])
+def verify_email_verification_otp(request):
+    session_key = request.data.get('session_key')
+    my_session = SessionStore(session_key=session_key)
+    data = {}
+    otp = int(request.data.get('otp'))
+    user = request.user
+    if("otp" in my_session and "otp_count" in my_session) and otp == my_session['otp']  and (my_session['otp_count'] > 0):
+        user.email_verified=True
+        user.save()
+        data['email'] = user.email
+        data['pk'] = user.pk
+        data['response'] = "Email Verfied Successfully"
+        status_code=status.HTTP_200_OK
+        my_session.delete()
+    else:
+        if("otp_count" in my_session and my_session['otp_count'] > 0):
+            my_session['otp_count'] -= 1
+            data['error_message'] = "invalid OTP"
+        else:
+            my_session.delete()
+            data['error_message'] = "Limit Exceeded, Register again"
+
+        status_code=status.HTTP_400_BAD_REQUEST
+    return Response(data,status=status_code)
+    
+# >>>>> Email verification <<<<<<<<<
+# >>>>> Email verification <<<<<<<<<
 
 
 

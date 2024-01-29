@@ -22,6 +22,9 @@ from apps.user_account.api_v1.views import ( UserViewSet ,
                                             forget_password_username,
                                             verify_forget_password,
                                             change_password,
+                                            phone_verification_otp,verify_phone_verification_otp,
+                                            email_verification_otp,verify_email_verification_otp,
+
                                             LoginHistoryViewSet
                                             )
 
@@ -55,8 +58,14 @@ urlpatterns = [
     path('login-phone-otp/',login_phone_otp,name="login_phone_otp"),
     path('verify-phone-otp/',verify_login_phone_otp,name="verify_phone_otp"),
 
-    path('login-email-otp/',login_email_otp,name="login_phone_otp"),
-    path('verify-email-otp/',verify_login_email_otp,name="verify_phone_otp"),
+    path('login-email-otp/',login_email_otp,name="login_email_otp"),
+    path('verify-email-otp/',verify_login_email_otp,name="verify_email_otp"),
+
+    path('phone-verification-otp/',phone_verification_otp,name="phone_verification_otp"),
+    path('verify-phone-verification-otp/',verify_phone_verification_otp,name="verify_phone_verification_otp"),
+
+    path('email-verification-otp/',email_verification_otp,name="email_verification_otp"),
+    path('verify-email-verification-otp/',verify_email_verification_otp,name="verify_email_verification_otp"),
 
     path('logout/',logout_view,name="logout"),
     path('forget-password-username/',forget_password_username,name="forget_password_username"),
@@ -69,3 +78,5 @@ urlpatterns = [
 
 app_name = "api_v1"
 urlpatterns += router.urls
+
+

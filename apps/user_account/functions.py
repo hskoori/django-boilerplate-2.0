@@ -9,32 +9,39 @@ import datetime
 
 
 def validate_email(email):
-    account = None
     try:
-        account = User.objects.get(email=email,email_verified=True)
+        if(User.objects.filter(email=email,email_verified=True).exists()):
+            return False
+        else:
+            return True
     except User.DoesNotExist:
-        return None
-    if account != None:
-        return email
+        return True
+    except:
+        return False
 
 def validate_username(username):
-    account = None
     try:
-        account = User.objects.get(username=username)
+        if(User.objects.filter(username=username).exists()):
+            return False
+        else:
+            return True
     except User.DoesNotExist:
-        return None
-    if account != None:
-        return username
+        return True
+    except:
+        return False
     
-def validate_phone(phone):
-    account = None
+def validate_phone(country_code,phone):
     try:
-        account = User.objects.get(phone=phone,phone_verified=True)
+        if(User.objects.filter(country_code=country_code, phone=phone,phone_verified=True).exists()):
+            return False
+        else:
+            return True
     except User.DoesNotExist:
-        return None
-    if account != None:
-        return phone
-    
+        return True
+    except:
+        return False
+
+
 
 def get_new_username():
     try:
